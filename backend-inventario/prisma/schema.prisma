@@ -10,11 +10,10 @@ datasource db {
 }
 
 model Producto {
-  id           Int      @id @default(autoincrement())
-  nombre       String
-  precio       Float
-  categoria    String
-  fotoBase64   String?  // ¡La clave para las fotos de la cámara!
-  codigoBarras String?  // Campo opcional para escaneo QR/código de barras
-  createdAt    DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  nombre     String
+  precio     Float
+  categoria  String
+  fotoBase64 String?  // 
+  createdAt  DateTime @default(now())
 }

@@ -20,12 +20,7 @@ app.use('/productos', productoRoutes);
 
 // Ruta de prueba/salud
 app.get('/', (req, res) => {
-  res.json({ mensaje: 'Servidor Backend InventarioPro activo y listo 🚀' });
+  res.json({ mensaje: 'Servidor Backend InventarioPro activo y listo' });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n==================================================`);
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`📦 Rutas CRUD disponibles en http://localhost:${PORT}/productos`);
-  console.log(`==================================================\n`);
-});
+app.listen(PORT, () => {});
