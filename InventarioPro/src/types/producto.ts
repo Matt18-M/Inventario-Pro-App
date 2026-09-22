@@ -3,6 +3,7 @@ export interface Producto {
   nombre: string;
   precio: number;
   categoria: string;
+  codigoBarras?: string | null;
   fotoBase64?: string | null;
   createdAt: string;
 }
@@ -11,5 +12,6 @@ export interface NuevoProducto {
   nombre: string;
   precio: number;
   categoria: string;
+  codigoBarras?: string | null;
   fotoBase64?: string | null;
 }

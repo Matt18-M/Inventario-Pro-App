@@ -1,8 +1,8 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 
 import { ProductoProvider } from './src/context/ProductoContext';
 import { ProductosScreen } from './src/screens/ProductosScreen';
@@ -19,23 +19,36 @@ export default function App() {
   return (
     <ProductoProvider>
       <NavigationContainer>
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <Tab.Navigator
           initialRouteName="Listado"
           screenOptions={{
             headerStyle: {
-              backgroundColor: '#2563EB',
+              backgroundColor: '#0F172A',
+              elevation: 4,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 4,
             },
             headerTintColor: '#FFFFFF',
             headerTitleStyle: {
-              fontWeight: 'bold',
+              fontWeight: '700',
+              fontSize: 18,
             },
             tabBarActiveTintColor: '#2563EB',
-            tabBarInactiveTintColor: '#6B7280',
+            tabBarInactiveTintColor: '#64748B',
             tabBarStyle: {
-              height: 60,
-              paddingBottom: 8,
-              paddingTop: 6,
+              height: 64,
+              paddingBottom: 10,
+              paddingTop: 8,
+              backgroundColor: '#FFFFFF',
+              borderTopColor: '#E2E8F0',
+              borderTopWidth: 1,
+            },
+            tabBarLabelStyle: {
+              fontSize: 12,
+              fontWeight: '600',
             },
           }}
         >
@@ -43,10 +56,14 @@ export default function App() {
             name="Listado"
             component={ProductosScreen}
             options={{
-              title: 'Inventario',
+              title: 'Inventario Pro',
               tabBarLabel: 'Inventario',
-              tabBarIcon: ({ color, size }) => (
-                <Text style={{ fontSize: size - 2, color }}>📦</Text>
+              tabBarIcon: ({ color, size, focused }) => (
+                <Ionicons
+                  name={focused ? 'cube' : 'cube-outline'}
+                  size={size}
+                  color={color}
+                />
               ),
             }}
           />
@@ -56,8 +73,12 @@ export default function App() {
             options={{
               title: 'Nuevo Producto',
               tabBarLabel: 'Agregar',
-              tabBarIcon: ({ color, size }) => (
-                <Text style={{ fontSize: size - 2, color }}>➕</Text>
+              tabBarIcon: ({ color, size, focused }) => (
+                <Ionicons
+                  name={focused ? 'add-circle' : 'add-circle-outline'}
+                  size={size + 2}
+                  color={color}
+                />
               ),
             }}
           />

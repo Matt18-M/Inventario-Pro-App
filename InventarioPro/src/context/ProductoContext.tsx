@@ -25,7 +25,6 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [cargando, setCargando] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // GET /productos (Para listar el inventario)
   const obtenerProductos = async () => {
     setCargando(true);
     setError(null);
@@ -33,13 +32,17 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({ children }
       const response = await api.get<Producto[]>('/productos');
       setProductos(response.data);
     } catch (err: any) {
-      setError('Error al obtener los productos');
+      console.error('Error al obtener productos:', err.message, err.response?.data);
+      if (err.message === 'Network Error' || err.code === 'ECONNABORTED') {
+        setError('Error de red: No se pudo conectar al servidor. Revisa que el backend esté activo y que la IP en api.ts sea correcta.');
+      } else {
+        setError('Error al obtener los productos del servidor.');
+      }
     } finally {
       setCargando(false);
     }
   };
 
-  // POST /productos (Omitiendo id y createdAt tal como se especifica en la guía)
   const agregarProducto = async (nuevoProducto: NuevoProducto): Promise<boolean> => {
     setCargando(true);
     setError(null);
@@ -48,6 +51,7 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({ children }
         nombre: nuevoProducto.nombre,
         precio: nuevoProducto.precio,
         categoria: nuevoProducto.categoria,
+        codigoBarras: nuevoProducto.codigoBarras || null,
         fotoBase64: nuevoProducto.fotoBase64 || null,
       };
 
@@ -55,14 +59,18 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({ children }
       setProductos((prev) => [response.data, ...prev]);
       return true;
     } catch (err: any) {
-      setError('Error al agregar el producto');
+      console.error('Error al agregar producto:', err.message, err.response?.data);
+      if (err.message === 'Network Error' || err.code === 'ECONNABORTED') {
+        setError('Error de red: No se pudo conectar al servidor backend.');
+      } else {
+        setError('Error al agregar el producto al servidor.');
+      }
       return false;
     } finally {
       setCargando(false);
     }
   };
 
-  // DELETE /productos/:id (Para borrar un producto)
   const eliminarProducto = async (id: number): Promise<boolean> => {
     setCargando(true);
     setError(null);
@@ -71,7 +79,8 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({ children }
       setProductos((prev) => prev.filter((item) => item.id !== id));
       return true;
     } catch (err: any) {
-      setError('Error al eliminar el producto');
+      console.error('Error al eliminar producto:', err.message, err.response?.data);
+      setError('Error al eliminar el producto.');
       return false;
     } finally {
       setCargando(false);

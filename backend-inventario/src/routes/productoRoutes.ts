@@ -8,7 +8,6 @@ import {
 
 const router = Router();
 
-// Rutas /productos
 router.get('/', obtenerProductos);
 router.post('/', crearProducto);
 router.put('/:id', actualizarProducto);

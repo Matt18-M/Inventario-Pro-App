@@ -1,17 +1,12 @@
 import axios from 'axios';
-import { Platform } from 'react-native';
 
-// Configura Axios apuntando a tu http://<IP-DE-TU-PC>:3000 según especificación del PDF
-const IP_DE_TU_PC = '192.168.1.100';
+// ⚠️ Cambia esta IP si cambia la dirección IP de tu computadora en la red Wi-Fi
+const IP_DE_TU_PC = '192.168.1.79';
 
 const getBaseURL = () => {
-  if (Platform.OS === 'android') {
-    return `http://10.0.2.2:3000`;
-  } else if (Platform.OS === 'ios') {
-    return `http://localhost:3000`;
-  } else {
-    return `http://${IP_DE_TU_PC}:3000`;
-  }
+  // Para conectar desde dispositivos físicos (como un iPhone o Android con Expo Go)
+  // o emuladores a la red local, utilizamos la IP de tu PC:
+  return `http://${IP_DE_TU_PC}:3000`;
 };
 
 const api = axios.create({
@@ -19,6 +14,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000,
 });
 
 export default api;

@@ -1,7 +1,6 @@
 import { type Request, type Response } from 'express';
 import prisma from '../prisma';
 
-// GET /productos (Para listar el inventario)
 export const obtenerProductos = async (req: Request, res: Response) => {
   try {
     const productos = await prisma.producto.findMany({
@@ -13,9 +12,8 @@ export const obtenerProductos = async (req: Request, res: Response) => {
   }
 };
 
-// POST /productos (Para crear un nuevo producto con su foto)
 export const crearProducto = async (req: Request, res: Response) => {
-  const { nombre, precio, categoria, fotoBase64 } = req.body;
+  const { nombre, precio, categoria, codigoBarras, fotoBase64 } = req.body;
 
   try {
     const nuevoProducto = await prisma.producto.create({
@@ -23,6 +21,7 @@ export const crearProducto = async (req: Request, res: Response) => {
         nombre,
         precio: Number(precio),
         categoria,
+        codigoBarras: codigoBarras || null,
         fotoBase64,
       },
     });
@@ -33,10 +32,9 @@ export const crearProducto = async (req: Request, res: Response) => {
   }
 };
 
-// PUT /productos/:id (Para editar el precio o la foto)
 export const actualizarProducto = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { nombre, precio, categoria, fotoBase64 } = req.body;
+  const { nombre, precio, categoria, codigoBarras, fotoBase64 } = req.body;
 
   try {
     const productoActualizado = await prisma.producto.update({
@@ -47,6 +45,7 @@ export const actualizarProducto = async (req: Request, res: Response) => {
         nombre,
         precio: precio !== undefined ? Number(precio) : undefined,
         categoria,
+        codigoBarras,
         fotoBase64,
       },
     });
@@ -57,7 +56,6 @@ export const actualizarProducto = async (req: Request, res: Response) => {
   }
 };
 
-// DELETE /productos/:id (Para borrar un producto defectuoso)
 export const eliminarProducto = async (req: Request, res: Response) => {
   const { id } = req.params;
 
