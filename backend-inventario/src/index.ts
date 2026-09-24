@@ -20,13 +20,13 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, async () => {
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+  console.log(` Servidor corriendo en http://localhost:${PORT}`);
   
   try {
     await prisma.$connect();
-    console.log('✅ Conexión exitosa a la base de datos PostgreSQL');
+    console.log('Conexión exitosa a la base de datos PostgreSQL');
   } catch (error: any) {
-    console.error('❌ Error de conexión a la base de datos PostgreSQL:');
+    console.error('Error de conexión a la base de datos PostgreSQL:');
     console.error(error.message);
   }
 });

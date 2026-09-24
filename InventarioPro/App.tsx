@@ -7,10 +7,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { ProductoProvider } from './src/context/ProductoContext';
 import { ProductosScreen } from './src/screens/ProductosScreen';
 import { NuevoProductoScreen } from './src/screens/NuevoProductoScreen';
+import { Producto } from './src/types/producto';
 
 export type RootTabParamList = {
   Listado: undefined;
-  Agregar: undefined;
+  // Sin params = modo "crear"; con { producto } = modo "editar"
+  Agregar: { producto?: Producto } | undefined;
 };
 
 const Tab = createBottomTabNavigator<RootTabParamList>();

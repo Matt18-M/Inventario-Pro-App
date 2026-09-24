@@ -16,7 +16,11 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { ProductoContext } from '../context/ProductoContext';
 import { Producto } from '../types/producto';
 
-export const ProductosScreen: React.FC = () => {
+interface ProductosScreenProps {
+  navigation: any;
+}
+
+export const ProductosScreen: React.FC<ProductosScreenProps> = ({ navigation }) => {
   const { productos, cargando, error, obtenerProductos, eliminarProducto } = useContext(ProductoContext);
 
   const [busqueda, setBusqueda] = useState('');
@@ -45,6 +49,10 @@ export const ProductosScreen: React.FC = () => {
     );
   };
 
+  const handleEditar = (producto: Producto) => {
+    navigation.navigate('Agregar', { producto });
+  };
+
   const abrirEscanerCodigo = async () => {
   if (!permission?.granted) {
     const { granted } = await requestPermission();
@@ -61,6 +69,7 @@ export const ProductosScreen: React.FC = () => {
   procesandoCodigo.current = false;
   setEscaneando(true);
 };
+
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
   if (procesandoCodigo.current) {
@@ -168,13 +177,23 @@ export const ProductosScreen: React.FC = () => {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.botonEliminar}
-          onPress={() => handleEliminar(item.id, item.nombre)}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="trash-outline" size={18} color="#EF4444" />
-        </TouchableOpacity>
+        <View style={styles.accionesFila}>
+          <TouchableOpacity
+            style={styles.botonEditar}
+            onPress={() => handleEditar(item)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="create-outline" size={18} color="#2563EB" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.botonEliminar}
+            onPress={() => handleEliminar(item.id, item.nombre)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="trash-outline" size={18} color="#EF4444" />
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -189,6 +208,10 @@ export const ProductosScreen: React.FC = () => {
         </View>
       ) : null}
 
+      <Text>
+        Total de Productos: {productos.length}
+      </Text>
+      
       <FlatList
         data={productosFiltrados}
         keyExtractor={(item) => item.id.toString()}
@@ -497,6 +520,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#059669',
   },
+  accionesFila: {
+    flexDirection: 'column',
+    gap: 8,
+    marginLeft: 6,
+  },
+  botonEditar: {
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
   botonEliminar: {
     padding: 10,
     borderRadius: 10,
@@ -505,7 +542,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#FEE2E2',
-    marginLeft: 6,
   },
   errorBanner: {
     flexDirection: 'row',

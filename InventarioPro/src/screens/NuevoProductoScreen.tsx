@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef } from 'react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,13 +15,19 @@ import * as ImagePicker from 'expo-image-picker';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { ProductoContext } from '../context/ProductoContext';
+import { Producto } from '../types/producto';
 
 interface NuevoProductoScreenProps {
   navigation: any;
+  route?: any;
 }
 
-export const NuevoProductoScreen: React.FC<NuevoProductoScreenProps> = ({ navigation }) => {
-  const { agregarProducto } = useContext(ProductoContext);
+export const NuevoProductoScreen: React.FC<NuevoProductoScreenProps> = ({ navigation, route }) => {
+  const { agregarProducto, actualizarProducto } = useContext(ProductoContext);
+
+  // Si viene un producto por parámetro, entramos en modo edición
+  const productoEditar: Producto | undefined = route?.params?.producto;
+  const esEdicion = !!productoEditar;
 
   const [nombre, setNombre] = useState('');
   const [precio, setPrecio] = useState('');
@@ -35,6 +41,39 @@ export const NuevoProductoScreen: React.FC<NuevoProductoScreenProps> = ({ naviga
   const [permission, requestPermission] = useCameraPermissions();
 
   const procesandoCodigo = useRef(false);
+
+  // Precargar los campos si estamos editando un producto existente
+  useEffect(() => {
+    if (productoEditar) {
+      setNombre(productoEditar.nombre ?? '');
+      setPrecio(
+        productoEditar.precio !== undefined && productoEditar.precio !== null
+          ? String(productoEditar.precio)
+          : ''
+      );
+      setCategoria(productoEditar.categoria ?? '');
+      setCodigoBarras(productoEditar.codigoBarras ?? '');
+      setFotoBase64(productoEditar.fotoBase64 ?? null);
+
+      navigation.setOptions?.({ title: 'Editar Producto' });
+    } else {
+      navigation.setOptions?.({ title: 'Nuevo Producto' });
+    }
+  }, [productoEditar]);
+
+  // Como el Tab.Navigator no desmonta esta pantalla al cambiar de pestaña,
+  // si el usuario toca la pestaña "Agregar" directamente (no desde "editar"),
+  // limpiamos los params para volver a modo "crear" en vez de quedar
+  // pegados en modo edición con los datos del último producto editado.
+  useEffect(() => {
+    const unsubscribe = navigation.addListener?.('tabPress', () => {
+      if (route?.params?.producto) {
+        navigation.setParams({ producto: undefined });
+        limpiarFormulario();
+      }
+    });
+    return unsubscribe;
+  }, [navigation, route?.params?.producto]);
 
   const tomarFotografia = async () => {
     try {
@@ -54,8 +93,11 @@ export const NuevoProductoScreen: React.FC<NuevoProductoScreenProps> = ({ naviga
         base64: true,
       });
 
+      
+
       if (!result.canceled && result.assets && result.assets.length > 0 && result.assets[0].base64) {
         setFotoBase64(result.assets[0].base64);
+        Alert.alert("Foto tomada con exito")  
       }
     } catch (error: any) {
       console.error('Error al abrir la cámara:', error);
@@ -64,50 +106,58 @@ export const NuevoProductoScreen: React.FC<NuevoProductoScreenProps> = ({ naviga
   };
 
   const abrirEscanerCodigo = async () => {
-  if (!permission?.granted) {
-    const resultado = await requestPermission();
+    if (!permission?.granted) {
+      const resultado = await requestPermission();
 
-    if (!resultado.granted) {
-      Alert.alert(
-        'Permiso Denegado',
-        'Se necesita permiso para usar la cámara y escanear el código.'
-      );
-      return;
+      if (!resultado.granted) {
+        Alert.alert(
+          'Permiso Denegado',
+          'Se necesita permiso para usar la cámara y escanear el código.'
+        );
+        return;
+      }
     }
-  }
 
-  procesandoCodigo.current = false;
-  setEscaneando(true);
-};
+    procesandoCodigo.current = false;
+    setEscaneando(true);
+  };
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
-  if (procesandoCodigo.current) {
-    return;
-  }
+    if (procesandoCodigo.current) {
+      return;
+    }
 
-  procesandoCodigo.current = true;
+    procesandoCodigo.current = true;
 
-  setCodigoBarras(data);
-  setEscaneando(false);
+    setCodigoBarras(data);
+    setEscaneando(false);
 
-  Alert.alert(
-    'Código detectado',
-    `Código: ${data}`,
-    [
+    Alert.alert(
+      'Código detectado',
+      `Código: ${data}`,
+      [
+        {
+          text: 'Aceptar',
+          onPress: () => {
+            procesandoCodigo.current = false;
+          },
+        },
+      ],
       {
-        text: 'Aceptar',
-        onPress: () => {
+        onDismiss: () => {
           procesandoCodigo.current = false;
         },
-      },
-    ],
-    {
-      onDismiss: () => {
-        procesandoCodigo.current = false;
-      },
-    }
-  );
-};
+      }
+    );
+  };
+
+  const limpiarFormulario = () => {
+    setNombre('');
+    setPrecio('');
+    setCategoria('');
+    setCodigoBarras('');
+    setFotoBase64(null);
+  };
 
   const handleGuardarProducto = async () => {
     if (!nombre.trim() || !precio.trim()) {
@@ -123,31 +173,44 @@ export const NuevoProductoScreen: React.FC<NuevoProductoScreenProps> = ({ naviga
 
     setGuardando(true);
 
-    const exito = await agregarProducto({
+    const payload = {
       nombre: nombre.trim(),
       precio: precioNum,
       categoria: categoria.trim() || 'General',
       codigoBarras: codigoBarras.trim() || null,
       fotoBase64,
-    });
+    };
+
+    const exito = esEdicion
+      ? await actualizarProducto(productoEditar!.id, payload)
+      : await agregarProducto(payload);
 
     setGuardando(false);
 
     if (exito) {
-      setNombre('');
-      setPrecio('');
-      setCategoria('');
-      setCodigoBarras('');
-      setFotoBase64(null);
-
-      Alert.alert('¡Éxito!', 'Producto registrado exitosamente.', [
-        {
-          text: 'Ver Inventario',
-          onPress: () => navigation.navigate('Listado'),
-        },
-      ]);
+      if (esEdicion) {
+        Alert.alert('¡Actualizado!', 'El producto se actualizó correctamente.', [
+          {
+            text: 'Ver Inventario',
+            onPress: () => navigation.navigate('Listado'),
+          },
+        ]);
+      } else {
+        limpiarFormulario();
+        Alert.alert('¡Éxito!', 'Producto registrado exitosamente.', [
+          {
+            text: 'Ver Inventario',
+            onPress: () => navigation.navigate('Listado'),
+          },
+        ]);
+      }
     } else {
-      Alert.alert('Error', 'No se pudo registrar el producto en el servidor.');
+      Alert.alert(
+        'Error',
+        esEdicion
+          ? 'No se pudo actualizar el producto en el servidor.'
+          : 'No se pudo registrar el producto en el servidor.'
+      );
     }
   };
 
@@ -235,7 +298,9 @@ export const NuevoProductoScreen: React.FC<NuevoProductoScreenProps> = ({ naviga
         {/* Previsualización de Foto */}
         {fotoBase64 ? (
           <View style={styles.previewContenedor}>
-            <Text style={styles.previewLabel}>Foto recien capturada:</Text>
+            <Text style={styles.previewLabel}>
+              {esEdicion ? 'Foto del producto:' : 'Foto recien capturada:'}
+            </Text>
             <Image
               source={{ uri: `data:image/jpeg;base64,${fotoBase64}` }}
               style={styles.previewImagen}
@@ -247,7 +312,7 @@ export const NuevoProductoScreen: React.FC<NuevoProductoScreenProps> = ({ naviga
           </View>
         ) : null}
 
-        {/* Botón Guardar Producto */}
+        {/* Botón Guardar / Actualizar Producto */}
         <TouchableOpacity
           style={[
             styles.botonGuardarVerde,
@@ -261,8 +326,15 @@ export const NuevoProductoScreen: React.FC<NuevoProductoScreenProps> = ({ naviga
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <>
-              <Ionicons name="save-outline" size={22} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.textoBotonGuardar}>Guardar Producto</Text>
+              <Ionicons
+                name={esEdicion ? 'sync-outline' : 'save-outline'}
+                size={22}
+                color="#FFFFFF"
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.textoBotonGuardar}>
+                {esEdicion ? 'Actualizar Producto' : 'Guardar Producto'}
+              </Text>
             </>
           )}
         </TouchableOpacity>
@@ -504,11 +576,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   tituloScanner: {
-  position: 'absolute',
-  top: 60,
-  color: '#FFFFFF',
-  fontSize: 20,
-  fontWeight: '700',
-},
-
+    position: 'absolute',
+    top: 60,
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '700',
+  },
 });

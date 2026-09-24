@@ -8,6 +8,7 @@ interface ProductoContextType {
   error: string | null;
   obtenerProductos: () => Promise<void>;
   agregarProducto: (nuevoProducto: NuevoProducto) => Promise<boolean>;
+  actualizarProducto: (id: number, producto: NuevoProducto) => Promise<boolean>;
   eliminarProducto: (id: number) => Promise<boolean>;
 }
 
@@ -17,6 +18,7 @@ export const ProductoContext = createContext<ProductoContextType>({
   error: null,
   obtenerProductos: async () => {},
   agregarProducto: async () => false,
+  actualizarProducto: async() => false,
   eliminarProducto: async () => false,
 });
 
@@ -71,6 +73,56 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
+  const actualizarProducto = async (
+    id: number,
+    producto: NuevoProducto
+): Promise<boolean> => {
+    setCargando(true);
+    setError(null);
+
+    try {
+        const payload: NuevoProducto = {
+            nombre: producto.nombre,
+            precio: producto.precio,
+            categoria: producto.categoria,
+            codigoBarras: producto.codigoBarras || null,
+            fotoBase64: producto.fotoBase64 || null,
+        };
+
+        const response = await api.put<Producto>(
+            `/productos/${id}`,
+            payload
+        );
+
+        setProductos((prev) =>
+            prev.map((item) =>
+                item.id === id ? response.data : item
+            )
+        );
+
+        return true;
+    } catch (err: any) {
+        console.error(
+            'Error al actualizar producto:',
+            err.message,
+            err.response?.data
+        );
+
+        if (
+            err.message === 'Network Error' ||
+            err.code === 'ECONNABORTED'
+        ) {
+            setError('Error de red: No se pudo conectar al servidor backend.');
+        } else {
+            setError('Error al actualizar el producto.');
+        }
+
+        return false;
+    } finally {
+        setCargando(false);
+    }
+};
+
   const eliminarProducto = async (id: number): Promise<boolean> => {
     setCargando(true);
     setError(null);
@@ -99,6 +151,7 @@ export const ProductoProvider: React.FC<{ children: ReactNode }> = ({ children }
         error,
         obtenerProductos,
         agregarProducto,
+        actualizarProducto,
         eliminarProducto,
       }}
     >
